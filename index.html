@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yandex Nazorat Web App - Samarqand</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --yandex-yellow: #FCE000;
+            --yandex-black: #111111;
+            --yandex-dark-card: rgba(22, 27, 34, 0.88);
+            --yandex-border: rgba(255, 255, 255, 0.12);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            --active-accent: #FCE000;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "YS Text", Roboto, sans-serif;
+            background-color: #0a0e17; color: #ffffff; margin: 0; padding: 16px; box-sizing: border-box; min-height: 100vh; position: relative;
+        }
+
+        .bg-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; filter: blur(3px); background-size: cover; background-position: center;
+        }
+
+        body.theme-default .bg-overlay { background: linear-gradient(180deg, rgba(10, 14, 23, 0.85) 0%, rgba(10, 14, 23, 0.95) 100%), url('https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat; }
+        body.theme-samokat { --active-accent: #10b981; }
+        body.theme-samokat .bg-overlay { background: linear-gradient(180deg, rgba(6, 44, 32, 0.88) 0%, rgba(10, 25, 20, 0.96) 100%), url('https://images.unsplash.com/photo-1597080262114-e7701c0d209b?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat; }
+        body.theme-bayk { --active-accent: #f97316; }
+        body.theme-bayk .bg-overlay { background: linear-gradient(180deg, rgba(45, 19, 10, 0.88) 0%, rgba(20, 10, 8, 0.96) 100%), url('https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat; }
+
+        .header-container { text-align: center; margin-top: 8px; margin-bottom: 20px; }
+        .brand-badge { display: inline-block; background: var(--yandex-yellow); color: var(--yandex-black); font-weight: 800; font-size: 11px; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; margin-bottom: 8px; }
+        .welcome-title { font-size: 22px; font-weight: 800; color: var(--yandex-yellow); margin: 0 0 6px 0; }
+        .sub-title { font-size: 13px; color: #cbd5e1; margin: 0; }
+
+        .type-select-container { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
+        .type-card { position: relative; height: 115px; border-radius: 20px; overflow: hidden; cursor: pointer; box-shadow: var(--card-shadow); border: 1px solid var(--yandex-border); display: flex; align-items: flex-end; padding: 16px; box-sizing: border-box; background-color: var(--yandex-dark-card); }
+        .type-card.samokat-card { border-left: 5px solid #10b981; }
+        .type-card.bayk-card { border-left: 5px solid #f97316; }
+        .type-card-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; filter: brightness(0.5); }
+        .type-card-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(0deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 70%); }
+        .type-card-content { position: relative; z-index: 2; display: flex; align-items: center; gap: 14px; width: 100%; }
+        .type-card-icon { font-size: 26px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px; font-weight: bold; }
+        .samokat-card .type-card-icon { background: #10b981; color: #fff; }
+        .bayk-card .type-card-icon { background: #f97316; color: #fff; }
+        .type-card-title { font-size: 18px; font-weight: 700; color: #fff; margin: 0; }
+        .type-card-desc { font-size: 12px; color: #cbd5e1; }
+
+        #form_screen { background: var(--yandex-dark-card); backdrop-filter: blur(20px); border-radius: 24px; padding: 20px; border: 1px solid var(--yandex-border); box-shadow: var(--card-shadow); }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #cbd5e1; text-transform: uppercase; }
+        select, input[type="text"], input[type="tel"] { width: 100%; padding: 14px; border: 1px solid var(--yandex-border); border-radius: 14px; box-sizing: border-box; font-size: 15px; background-color: rgba(255, 255, 255, 0.06); color: #ffffff; outline: none; }
+        select option { background-color: #161b22; color: #ffffff; }
+
+        .scan-btn { padding: 0 16px; background: var(--active-accent); color: #000; border: none; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .grid-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .grid-buttons.errors { grid-template-columns: repeat(3, 1fr); }
+        .btn-select { padding: 12px 8px; background-color: rgba(255, 255, 255, 0.05); border: 1px solid var(--yandex-border); border-radius: 12px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 500; color: #e2e8f0; }
+        .btn-select.active { background-color: var(--active-accent); color: #000; border-color: var(--active-accent); font-weight: 700; }
+        .footer-btn { margin-top: 24px; width: 100%; padding: 16px; background: var(--active-accent); color: #000; border: none; border-radius: 16px; font-size: 16px; font-weight: 800; cursor: pointer; }
+        .success-msg { display: none; background-color: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 14px; border-radius: 14px; text-align: center; margin-bottom: 18px; font-weight: 600; }
+        .back-btn { background: rgba(255, 255, 255, 0.08); color: #cbd5e1; border: 1px solid var(--yandex-border); padding: 10px 16px; border-radius: 10px; font-size: 12px; cursor: pointer; margin-bottom: 18px; font-weight: 600; }
+    </style>
+</head>
+<body class="theme-default">
+    <div class="bg-overlay"></div>
+    <div class="header-container">
+        <span class="brand-badge">Yandex Go Service</span>
+        <h2 class="welcome-title" id="main_title">Samarqand Elektronika Bo'limi</h2>
+        <p class="sub-title" id="app_title">🛴 🚲 Yandex Samokat va Bayk Nazorat Formasi</p>
+    </div>
+    
+    <div id="selection_screen" class="type-select-container">
+        <div class="type-card samokat-card" onclick="selectTransport('Samokat')">
+            <div class="type-card-bg" style="background-image: url('https://images.unsplash.com/photo-1597080262114-e7701c0d209b?auto=format&fit=crop&w=800&q=80');"></div>
+            <div class="type-card-overlay"></div>
+            <div class="type-card-content"><div class="type-card-icon">🛴</div><div class="type-card-text"><span class="type-card-title">Yandex Elektrosamokat</span></div></div>
+        </div>
+        <div class="type-card bayk-card" onclick="selectTransport('Bayk')">
+            <div class="type-card-bg" style="background-image: url('https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=800&q=80');"></div>
+            <div class="type-card-overlay"></div>
+            <div class="type-card-content"><div class="type-card-icon">🚲</div><div class="type-card-text"><span class="type-card-title">Yandex Bayk</span></div></div>
+        </div>
+    </div>
+
+    <div id="form_screen" style="display: none;">
+        <button class="back-btn" onclick="goBackToSelection()">⬅️ Orqaga</button>
+        <div class="success-msg" id="success_block">✅ Ma'lumot botga yuborildi!</div>
+        
+        <div class="form-group">
+            <label for="mexanik_name">Ismingizni tanlang:</label>
+            <select id="mexanik_name">
+                <option value="">-- Tanlang --</option>
+                <option value="Temur">Temur</option>
+                <option value="Shavkat">Shavkat</option>
+                <option value="Rustam">Rustam</option>
+                <option value="Qobil">Qobil</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="mexanik_phone">Telefon raqamingiz:</label>
+            <input type="tel" id="mexanik_phone" placeholder="+998972230237">
+        </div>
+        <div class="form-group">
+            <label id="num_label" for="samokat_num">Raqamni kiriting:</label>
+            <input type="text" id="samokat_num" placeholder="1024" inputmode="numeric">
+        </div>
+        <div class="form-group">
+            <label>Qismni tanlang:</label>
+            <div class="grid-buttons" id="parts_container"></div>
+        </div>
+        <div class="form-group" id="sn_group" style="display: none;">
+            <label for="battery_sn">Seriya Raqami (S/N):</label>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="battery_sn" placeholder="S/N..." style="flex: 1;">
+                <button type="button" class="scan-btn" onclick="scanSerialNumber()">📷 Skaner</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Xatolik kodi:</label>
+            <div class="grid-buttons errors" id="errors_container"></div>
+        </div>
+        <div class="form-group">
+            <label>Izoh:</label>
+            <div class="grid-buttons" id="comments_container"></div>
+        </div>
+        <button class="footer-btn" onclick="submitForm()">💾 SAQLASH VA YUBORISH</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        let transportType = "";
+        const PARTS_SAMOKAT = ["Dashbord", "Kontroller", "IoT modul", "Batareyka", "Motor koleso", "Shleyf"];
+        const ERRORS_SAMOKAT = ["10", "11", "12", "13", "14", "15", "18", "21", "22", "24", "BMS xatosi", "Zaryad olmaydi", "Xatolik yo'q"];
+        const PARTS_BIKE = ["Dashbord", "Bayk Kontrolleri", "IoT modul", "Akkumulyator", "Motor koleso", "Zaryad porti"];
+        const ERRORS_BIKE = ["E1", "E2", "E3", "E5", "E6", "E7", "E10", "BMS blok", "Zaryad hatosi", "Xatolik yo'q"];
+        const COMMENTS = ["Yonmayapti", "O'chib qolgan", "Ishlamayapti", "Razyom erigan", "Zaryad olmaydi", "Balansirovka", "Boshqa"];
+        let selectedPart = "", selectedError = "", selectedComment = "";
+
+        function selectTransport(type) {
+            transportType = type;
+            document.getElementById('selection_screen').style.display = 'none';
+            document.getElementById('form_screen').style.display = 'block';
+            document.body.className = type === 'Samokat' ? 'theme-samokat' : 'theme-bayk';
+            document.getElementById('main_title').innerText = `Yandex ${type} Bo'limi`;
+            initGrid('parts_container', type === 'Samokat' ? PARTS_SAMOKAT : PARTS_BIKE);
+            initGrid('errors_container', type === 'Samokat' ? ERRORS_SAMOKAT : ERRORS_BIKE, true);
+        }
+
+        function goBackToSelection() {
+            document.body.className = 'theme-default';
+            document.getElementById('form_screen').style.display = 'none';
+            document.getElementById('selection_screen').style.display = 'flex';
+        }
+
+        function initGrid(containerId, items, isErrorNum=false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+            items.forEach(item => {
+                const btn = document.createElement('div');
+                btn.className = 'btn-select';
+                btn.innerText = isErrorNum && !isNaN(item) ? item + " xato" : item;
+                btn.onclick = function() {
+                    container.querySelectorAll('.btn-select').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if(containerId === 'parts_container') { selectedPart = item; document.getElementById('sn_group').style.display = (item.includes("Batareyka") || item.includes("Akkumulyator") || item.includes("IoT")) ? 'block' : 'none'; }
+                    if(containerId === 'errors_container') selectedError = item;
+                    if(containerId === 'comments_container') selectedComment = item;
+                };
+                container.appendChild(btn);
+            });
+        }
+        initGrid('comments_container', COMMENTS);
+
+        function scanSerialNumber() {
+            if (tg.showScanQrPopup) {
+                tg.showScanQrPopup({text: "QR/Shtrix kodni skanerlang"}, (res) => { if(res) { document.getElementById('battery_sn').value = res.trim(); tg.closeScanQrPopup(); return true; } });
+            }
+        }
+
+        function submitForm() {
+            let name = document.getElementById('mexanik_name').value;
+            let phone = document.getElementById('mexanik_phone').value.trim();
+            let num = document.getElementById('samokat_num').value.trim();
+            if(!name || !phone || !num || !selectedPart || !selectedError || !selectedComment) { alert("Barcha maydonlarni to'ldiring!"); return; }
+            
+            tg.sendData(JSON.stringify({
+                tur: transportType, ism: name, tel: phone, samokat_num: num, 
+                qism: selectedPart, seriya_num: document.getElementById('battery_sn').value.trim() || "Kiritilmadi",
+                xatolik: selectedError, izoh: selectedComment
+            }));
+            document.getElementById('success_block').style.display = 'block';
+            setTimeout(() => document.getElementById('success_block').style.display = 'none', 3000);
+        }
+    </script>
+</body>
+</html>
