@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samarqand Yandeks Servis</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* ===== Yandex Go brend ranglari ===== */
+        :root {
+            --go-yellow: #FCE000;
+            --go-yellow-dark: #E6CC00;
+            --go-black: #21201F;
+
+            /* Kunduzgi rejim */
+            --text: #21201F;
+            --card-bg: rgba(255,255,255,0.50);
+            --field-bg: rgba(255,255,255,0.88);
+            --field-focus-bg: #ffffff;
+            --field-border: #E2E0DC;
+            --btn-bg: rgba(255,255,255,0.88);
+            --placeholder: #7C7A76;
+            --opt-bg: #ffffff;
+            --active-border: #21201F;
+            --label-shadow: 0 0 6px rgba(255,255,255,0.95), 0 0 2px rgba(255,255,255,0.95);
+            --shade: linear-gradient(rgba(33,32,31,0.05), rgba(33,32,31,0.30));
+            --bg-filter: none;
+        }
+        /* Kechki rejim */
+        html[data-theme="dark"] {
+            --text: #F5F4F2;
+            --card-bg: rgba(28,27,26,0.62);
+            --field-bg: rgba(48,47,45,0.92);
+            --field-focus-bg: #3a3937;
+            --field-border: #4a4845;
+            --btn-bg: rgba(58,57,55,0.92);
+            --placeholder: #a19f9a;
+            --opt-bg: #302f2d;
+            --active-border: #FCE000;
+            --label-shadow: 0 0 6px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9);
+            --shade: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.65));
+            --bg-filter: brightness(0.55) saturate(0.9);
+        }
+        * { box-sizing: border-box; }
+        html, body { min-height: 100%; }
+        body {
+            font-family: "YS Text", "Yandex Sans Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0; padding: 14px;
+            color: var(--text);
+            background: #2b2a29;
+        }
+
+        /* ===== Orqa fon: Registon ansambli ===== */
+        .bg { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: -3; filter: var(--bg-filter); }
+        .bg svg { width: 100%; height: 100%; display: block; }
+        .bg.photo {
+            z-index: -2;
+            background-image:
+                url('registon.jpg'),
+                url('https://commons.wikimedia.org/wiki/Special:FilePath/Registan_samarqand.jpg?width=1280');
+            background-size: cover, cover;
+            background-position: center, center;
+            background-repeat: no-repeat, no-repeat;
+        }
+        .bg.shade { z-index: -1; background: var(--shade); filter: none; }
+
+        .card {
+            background: var(--card-bg);
+            -webkit-backdrop-filter: blur(1.5px); backdrop-filter: blur(1.5px);
+            border-radius: 20px;
+            padding: 16px;
+            max-width: 560px;
+            margin: 0 auto;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+        }
+
+        /* ===== Sarlavha ===== */
+        .header {
+            margin: -16px -16px 16px; padding: 10px 14px 14px;
+            border-radius: 20px 20px 0 0;
+            background: var(--go-yellow); color: var(--go-black);
+        }
+        .header-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .brand { font-size: 12px; font-weight: 800; line-height: 1.2; letter-spacing: .2px; }
+        .controls { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+        .seg { display: flex; background: rgba(33,32,31,0.12); border-radius: 999px; padding: 2px; }
+        .pill {
+            border: none; background: transparent; color: var(--go-black);
+            font-size: 12px; font-weight: 800; padding: 5px 9px; border-radius: 999px; cursor: pointer;
+        }
+        .pill.active { background: var(--go-black); color: var(--go-yellow); }
+        .icon-btn {
+            border: none; background: rgba(33,32,31,0.12); color: var(--go-black);
+            font-size: 16px; line-height: 1; width: 32px; height: 30px; border-radius: 999px; cursor: pointer;
+        }
+        h3 { text-align: center; margin: 10px 0 0; font-size: 19px; font-weight: 800; color: var(--go-black); }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 800; margin-bottom: 6px; font-size: 14px; color: var(--text); text-shadow: var(--label-shadow); }
+        select, input[type="text"], input[type="tel"] {
+            width: 100%; padding: 12px; border: 2px solid var(--field-border); border-radius: 12px;
+            font-size: 15px; background-color: var(--field-bg); color: var(--text); outline: none;
+        }
+        select option { background: var(--opt-bg); color: var(--text); }
+        select:focus, input[type="text"]:focus, input[type="tel"]:focus {
+            border-color: var(--go-yellow); background: var(--field-focus-bg);
+        }
+        input::placeholder { color: var(--placeholder); }
+        .grid-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .grid-buttons.errors { grid-template-columns: repeat(3, 1fr); }
+        .grid-buttons.types { grid-template-columns: repeat(2, 1fr); }
+        .btn-select {
+            padding: 10px; background-color: var(--btn-bg); border: 2px solid transparent;
+            border-radius: 12px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 600;
+            color: var(--text); user-select: none;
+        }
+        .types .btn-select { font-size: 15px; padding: 13px; font-weight: 700; }
+        .btn-select.active {
+            background-color: var(--go-yellow); color: var(--go-black); border-color: var(--active-border);
+        }
+        .sn-row { display: flex; gap: 8px; align-items: stretch; }
+        .sn-row input { flex: 1; min-width: 0; }
+        .qr-btn {
+            flex: 0 0 auto; padding: 0 14px; border: none; border-radius: 12px;
+            background-color: var(--go-black); color: var(--go-yellow);
+            font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
+        }
+        html[data-theme="dark"] .qr-btn { background-color: var(--go-yellow); color: var(--go-black); }
+        #sn_group { display: none; }
+        .footer-btn {
+            margin-top: 10px; width: 100%; padding: 15px;
+            background-color: var(--go-yellow); color: var(--go-black);
+            border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer;
+        }
+        .footer-btn:active { background-color: var(--go-yellow-dark); }
+        .success-msg {
+            display: none; background-color: var(--go-yellow); color: var(--go-black);
+            padding: 12px; border-radius: 12px; text-align: center;
+            margin-bottom: 15px; font-weight: 700; font-size: 14px;
+        }
+        .user-welcome {
+            display: none; background-color: var(--go-black); color: var(--go-yellow);
+            padding: 10px; border-radius: 12px; font-size: 13px; font-weight: 600;
+            margin-bottom: 15px; text-align: center;
+        }
+        .logout-link { display: none; margin-top: 10px; text-align: center; font-size: 12px; color: var(--text); opacity: .75; cursor: pointer; text-decoration: underline; text-shadow: var(--label-shadow); }
+    </style>
+</head>
+<body>
+
+<!-- Orqa fon: 1-qatlam (zaxira) – Registon ansambli chizmasi, rasm yuklanmasa ham ko'rinadi -->
+<div class="bg" aria-hidden="true">
+    <svg viewBox="0 0 400 800" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#1c4e8a"/><stop offset=".55" stop-color="#f4b66a"/><stop offset="1" stop-color="#f7d9a0"/>
+            </linearGradient>
+            <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#d9b678"/><stop offset="1" stop-color="#b98f52"/>
+            </linearGradient>
+            <linearGradient id="dome" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#3fb4c9"/><stop offset="1" stop-color="#16708f"/>
+            </linearGradient>
+        </defs>
+        <rect width="400" height="800" fill="url(#sky)"/>
+        <!-- Chap: Ulug'bek madrasasi -->
+        <rect x="-10" y="470" width="125" height="330" fill="url(#wall)"/>
+        <rect x="14" y="400" width="22" height="130" fill="#caa56a"/>
+        <rect x="14" y="400" width="22" height="10" fill="#2a9bb5"/>
+        <ellipse cx="25" cy="396" rx="13" ry="9" fill="url(#dome)"/>
+        <path d="M45 800 V540 Q45 505 78 505 Q111 505 111 540 V800 Z" fill="#14577a"/>
+        <path d="M58 800 V548 Q58 524 78 524 Q98 524 98 548 V800 Z" fill="#0d3a56"/>
+        <!-- Markaz: Tilla-Kori madrasasi -->
+        <rect x="105" y="520" width="190" height="280" fill="url(#wall)"/>
+        <rect x="175" y="470" width="50" height="60" fill="#caa56a"/>
+        <ellipse cx="200" cy="470" rx="42" ry="38" fill="url(#dome)"/>
+        <rect x="196" y="425" width="8" height="12" fill="#e9c24a"/>
+        <path d="M170 800 V590 Q170 560 200 560 Q230 560 230 590 V800 Z" fill="#14577a"/>
+        <path d="M118 800 V600 Q118 580 135 580 Q152 580 152 600 V800 Z" fill="#a9824a"/>
+        <path d="M248 800 V600 Q248 580 265 580 Q282 580 282 600 V800 Z" fill="#a9824a"/>
+        <!-- O'ng: Sherdor madrasasi -->
+        <rect x="285" y="470" width="125" height="330" fill="url(#wall)"/>
+        <rect x="364" y="400" width="22" height="130" fill="#caa56a"/>
+        <rect x="364" y="400" width="22" height="10" fill="#2a9bb5"/>
+        <ellipse cx="375" cy="396" rx="13" ry="9" fill="url(#dome)"/>
+        <path d="M289 800 V540 Q289 505 322 505 Q355 505 355 540 V800 Z" fill="#14577a"/>
+        <path d="M302 800 V548 Q302 524 322 524 Q342 524 342 548 V800 Z" fill="#0d3a56"/>
+        <ellipse cx="322" cy="470" rx="22" ry="18" fill="url(#dome)"/>
+        <!-- Maydon -->
+        <rect x="0" y="700" width="400" height="100" fill="#d8bf8b" opacity=".55"/>
+    </svg>
+</div>
+<!-- 2-qatlam: haqiqiy Registon fotosi (yuklansa chizma ustini yopadi) -->
+<div class="bg photo"></div>
+<div class="bg shade"></div>
+
+<div class="card">
+
+    <div class="header">
+        <div class="header-top">
+            <div class="brand" id="brand"></div>
+            <div class="controls">
+                <div class="seg">
+                    <button type="button" class="pill" id="lang_uz" onclick="setLang('uz')">UZ</button>
+                    <button type="button" class="pill" id="lang_ru" onclick="setLang('ru')">RU</button>
+                </div>
+                <button type="button" class="icon-btn" id="theme_btn" onclick="toggleTheme()" aria-label="Theme">🌙</button>
+            </div>
+        </div>
+        <h3 id="title"></h3>
+    </div>
+
+    <div class="success-msg" id="success_block" data-i18n="successMsg"></div>
+
+    <div class="user-welcome" id="welcome_block"></div>
+
+    <div class="form-group" id="name_group">
+        <label for="mexanik_name" data-i18n="nameLabel"></label>
+        <select id="mexanik_name" onchange="onNameChange()">
+            <option value="" data-i18n="selectOpt"></option>
+            <option value="Shavkat">Shavkat</option>
+            <option value="Rustam">Rustam</option>
+            <option value="Qobil">Qobil</option>
+            <option value="Umid">Umid</option>
+        </select>
+    </div>
+
+    <div class="form-group" id="phone_group">
+        <label for="mexanik_phone" data-i18n="phoneLabel"></label>
+        <input type="tel" id="mexanik_phone" data-ph="phonePh">
+    </div>
+
+    <div class="form-group" id="types_group">
+        <label data-i18n="typeLabel"></label>
+        <div class="grid-buttons types" id="types_container"></div>
+    </div>
+
+    <div class="form-group" id="num_group">
+        <label for="samokat_num" id="num_label"></label>
+        <div class="sn-row">
+            <input type="text" id="samokat_num" data-ph="numPh" inputmode="numeric">
+            <button type="button" class="qr-btn" id="num_qr_btn" style="display:none" data-i18n="qrBtn" onclick="scanQR('samokat_num', 'qrSamokat')"></button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label data-i18n="partLabel"></label>
+        <div class="grid-buttons" id="parts_container"></div>
+    </div>
+
+    <div class="form-group" id="sn_group">
+        <label for="battery_sn" data-i18n="snLabel"></label>
+        <div class="sn-row">
+            <input type="text" id="battery_sn" data-ph="snPh" autocomplete="off">
+            <button type="button" class="qr-btn" data-i18n="qrBtn" onclick="scanQR('battery_sn', 'qrBattery')"></button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label data-i18n="errLabel"></label>
+        <div class="grid-buttons errors" id="errors_container"></div>
+    </div>
+
+    <div class="form-group">
+        <label data-i18n="commLabel"></label>
+        <div class="grid-buttons" id="comments_container"></div>
+    </div>
+
+    <button class="footer-btn" data-i18n="saveBtn" onclick="submitForm()"></button>
+    <span class="logout-link" id="logout_link" data-i18n="logout" onclick="logoutMechanic()"></span>
+</div>
+
+<script>
+    const $ = id => document.getElementById(id);
+
+    // Telegram tashqarisida (oddiy brauzerda) ham forma ishlashi uchun zaxira obyekt
+    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : {
+        ready() {}, expand() {},
+        sendData(d) { alert("Telegram tashqarisida yuborib bo'lmaydi:\n" + d); }
+    };
+    try { tg.ready(); tg.expand(); } catch (e) {}
+
+    // ===== Ma'lumotlar (botga/jadvalga HAR DOIM o'zbekcha qiymatlar ketadi) =====
+    const TYPES = ["Samokat", "Bayk"];
+    const PARTS = ["Dashbord", "Kontroller", "IoT", "Motor kaleso", "Tormoz", "Gaz pedal", "Batareyka", "Asosiy sim"];
+    const ERRORS = ["10", "11", "12", "13", "14", "15", "16", "18", "19", "21", "22", "23", "24", "26", "27", "31", "32", "35", "37", "39", "40", "41", "50", "51", "52", "54", "55", "57", "58", "Geo", "Harbit", "Xatolik yo'q"];
+    const COMMENTS = ["Yonmayapti", "O'chib qolgan", "Ishlamayapti", "Razyom", "Zaryad olmaydi", "Singan", "Boshqa"];
+
+    // Qaysi mexanik qaysi turga javob beradi (faqat qulaylik uchun, ISM bo'yicha).
+    // Telefon raqamlar bu yerda YOZILMAYDI (sahifa ochiq). Haqiqiy ruxsatni
+    // main.py'dagi MECHANICS ro'yxati TELEFON RAQAM bo'yicha tekshiradi:
+    // masalan, Qobil faqat +79895811328 bilan ikkala bo'limga kira oladi.
+    const MECHANIC_TYPES = {
+        "Shavkat": ["Samokat"],
+        "Rustam":  ["Samokat"],
+        "Qobil":   ["Samokat", "Bayk"],
+        "Umid":    ["Bayk"]
+    };
+
+    // ===== Tarjimalar =====
+    const I18N = {
+        uz: {
+            brand: "Samarqand Yandeks Servis",
+            title: { none: "🛴 Nazorat Formasi", Samokat: "🛴 Samokat Nazorat Formasi", Bayk: "🚲 Bayk Nazorat Formasi" },
+            types: { Samokat: "Samokat", Bayk: "Bayk" },
+            typesGen: { Samokat: "samokat", Bayk: "bayk" },
+            numLabel: { none: "Raqamini kiriting:", Samokat: "Samokat raqamini kiriting:", Bayk: "Bayk raqamini kiriting:" },
+            nameLabel: "Ismingizni tanlang:",
+            selectOpt: "-- Tanlang --",
+            phoneLabel: "Telefon raqamingiz (Tekshirish uchun):",
+            phonePh: "Masalan: +998972230237",
+            typeLabel: "Turini tanlang:",
+            numPh: "Masalan: 1024",
+            partLabel: "Qism nomini tanlang:",
+            snLabel: "Batareyka S/N:",
+            snPh: "S/N kiriting yoki skanerlang",
+            errLabel: "Xatolik kodini tanlang:",
+            commLabel: "Mexanik izohini tanlang:",
+            saveBtn: "💾 Saqlash va Yuborish",
+            successMsg: "✅ Ma'lumot botga yuborildi!",
+            logout: "Boshqa mexanik sifatida kirish",
+            qrBtn: "📷 QR skaner",
+            qrSamokat: "Samokat QR kodini skanerlang",
+            qrBattery: "Batareyka QR kodini skanerlang",
+            qrOld: "Telegram versiyangiz QR skanerni qo'llab-quvvatlamaydi. Iltimos, Telegramni yangilang yoki qo'lda kiriting.",
+            welcome: (n, p) => `⚙️ Tizimga kirildi: ${n} (${p})`,
+            parts: {},
+            comments: {},
+            errNum: n => n + " xatolik",
+            errLabels: {},
+            aName: "Iltimos, ismingizni tanlang!",
+            aPhone: "Iltimos, telefon raqamingizni kiriting!",
+            aType: "Iltimos, turini tanlang (Samokat yoki Bayk)!",
+            aMech: (n, t) => `${n} faqat ${t} bo'yicha mexanik!`,
+            aNum: ty => `Iltimos, ${ty} raqamini kiriting!`,
+            aPart: "Iltimos, qism nomini tanlang!",
+            aSN: "Iltimos, batareyka S/N raqamini kiriting yoki QR kodni skanerlang!",
+            aErr: "Iltimos, xatolik kodini tanlang!",
+            aComm: "Iltimos, izohni tanlang!"
+        },
+        ru: {
+            brand: "Самарканд Яндекс Сервис",
+            title: { none: "🛴 Форма контроля", Samokat: "🛴 Форма контроля самоката", Bayk: "🚲 Форма контроля байка" },
+            types: { Samokat: "Самокат", Bayk: "Байк" },
+            typesGen: { Samokat: "самоката", Bayk: "байка" },
+            numLabel: { none: "Введите номер:", Samokat: "Введите номер самоката:", Bayk: "Введите номер байка:" },
+            nameLabel: "Выберите ваше имя:",
+            selectOpt: "-- Выберите --",
+            phoneLabel: "Ваш номер телефона (для проверки):",
+            phonePh: "Например: +998972230237",
+            typeLabel: "Выберите тип:",
+            numPh: "Например: 1024",
+            partLabel: "Выберите деталь:",
+            snLabel: "S/N батареи:",
+            snPh: "Введите S/N или отсканируйте",
+            errLabel: "Выберите код ошибки:",
+            commLabel: "Выберите комментарий механика:",
+            saveBtn: "💾 Сохранить и отправить",
+            successMsg: "✅ Данные отправлены боту!",
+            logout: "Войти как другой механик",
+            qrBtn: "📷 Сканер QR",
+            qrSamokat: "Отсканируйте QR-код самоката",
+            qrBattery: "Отсканируйте QR-код батареи",
+            qrOld: "Ваша версия Telegram не поддерживает сканер QR. Обновите Telegram или введите вручную.",
+            welcome: (n, p) => `⚙️ Вход выполнен: ${n} (${p})`,
+            parts: {
+                "Dashbord": "Дашборд", "Kontroller": "Контроллер", "IoT": "IoT", "Motor kaleso": "Мотор-колесо",
+                "Tormoz": "Тормоз", "Gaz pedal": "Ручка газа", "Batareyka": "Батарея", "Asosiy sim": "Основной провод"
+            },
+            comments: {
+                "Yonmayapti": "Не включается", "O'chib qolgan": "Отключился", "Ishlamayapti": "Не работает",
+                "Razyom": "Разъём", "Zaryad olmaydi": "Не заряжается", "Singan": "Сломан", "Boshqa": "Другое"
+            },
+            errNum: n => "Ошибка " + n,
+            errLabels: { "Xatolik yo'q": "Нет ошибки" },
+            aName: "Пожалуйста, выберите ваше имя!",
+            aPhone: "Пожалуйста, введите номер телефона!",
+            aType: "Пожалуйста, выберите тип (Самокат или Байк)!",
+            aMech: (n, t) => `${n} — механик только по: ${t}!`,
+            aNum: ty => `Пожалуйста, введите номер ${ty}!`,
+            aPart: "Пожалуйста, выберите деталь!",
+            aSN: "Пожалуйста, введите S/N батареи или отсканируйте QR-код!",
+            aErr: "Пожалуйста, выберите код ошибки!",
+            aComm: "Пожалуйста, выберите комментарий!"
+        }
+    };
+
+    // ===== Holat =====
+    let lang = "uz";
+    let theme = "light";
+    let user = null;               // {name, phone}
+    let selectedType = "";
+    let selectedPart = "";
+    let selectedError = "";
+    let selectedComment = "";
+
+    const T = () => I18N[lang];
+    function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+    function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+    // ===== Tugmalar to'ri =====
+    function renderGrid(containerId, items, selected, onPick) {
+        const c = $(containerId);
+        c.innerHTML = "";
+        items.forEach(it => {
+            const b = document.createElement('div');
+            b.className = 'btn-select' + (it.value === selected ? ' active' : '');
+            b.textContent = it.label;
+            b.onclick = function () {
+                c.querySelectorAll('.btn-select').forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+                onPick(it.value);
+            };
+            c.appendChild(b);
+        });
+    }
+
+    function allowedTypes() {
+        const name = user ? user.name : $('mexanik_name').value;
+        return MECHANIC_TYPES[name] || TYPES;
+    }
+
+    // Faqat bitta turga ruxsat bo'lsa, tur avtomatik tanlanadi
+    function applyTypes() {
+        const allowed = allowedTypes();
+        if (allowed.length === 1) selectedType = allowed[0];
+        else if (!allowed.includes(selectedType)) selectedType = "";
+        renderAll();
+    }
+
+    function onNameChange() { selectedType = ""; applyTypes(); }
+
+    // ===== Hamma narsani joriy til/holatga qarab chizish =====
+    function renderAll() {
+        const t = T();
+        document.documentElement.lang = lang;
+
+        // Statik matnlar
+        document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t[el.dataset.i18n]; });
+        document.querySelectorAll('[data-ph]').forEach(el => { el.placeholder = t[el.dataset.ph]; });
+
+        // Sarlavha
+        $('brand').textContent = t.brand;
+        $('title').textContent = t.title[selectedType || 'none'];
+        document.title = t.brand;
+
+        // Til va rejim tugmalari
+        $('lang_uz').classList.toggle('active', lang === 'uz');
+        $('lang_ru').classList.toggle('active', lang === 'ru');
+        $('theme_btn').textContent = theme === 'dark' ? '☀️' : '🌙';
+
+        // Mexanik (login) bloklari
+        $('name_group').style.display = user ? 'none' : '';
+        $('phone_group').style.display = user ? 'none' : '';
+        $('logout_link').style.display = user ? 'block' : 'none';
+        const w = $('welcome_block');
+        if (user) { w.textContent = t.welcome(user.name, user.phone); w.style.display = 'block'; }
+        else { w.style.display = 'none'; }
+
+        // Tur tugmalari
+        const allowed = allowedTypes();
+        $('types_group').style.display = allowed.length === 1 ? 'none' : 'block';
+        renderGrid('types_container',
+            allowed.map(v => ({ value: v, label: t.types[v] })),
+            selectedType,
+            v => { selectedType = v; renderAll(); });
+
+        // Raqam bloki (Batareykada yashirinadi) va QR tugmasi (faqat Samokat)
+        const isBattery = selectedPart === "Batareyka";
+        $('num_label').textContent = t.numLabel[selectedType || 'none'];
+        $('num_group').style.display = isBattery ? 'none' : 'block';
+        $('sn_group').style.display = isBattery ? 'block' : 'none';
+        $('num_qr_btn').style.display = (selectedType === "Samokat") ? '' : 'none';
+
+        // Qism, xatolik, izoh tugmalari
+        renderGrid('parts_container',
+            PARTS.map(v => ({ value: v, label: t.parts[v] || v })),
+            selectedPart,
+            v => {
+                selectedPart = v;
+                if (v === "Batareyka") $('samokat_num').value = "";
+                else $('battery_sn').value = "";
+                renderAll();
+            });
+
+        renderGrid('errors_container',
+            ERRORS.map(v => {
+                const isNum = !isNaN(v);
+                return {
+                    value: isNum ? v + " xatolik" : v,       // botga o'zbekcha ketadi
+                    label: isNum ? t.errNum(v) : (t.errLabels[v] || v)
+                };
+            }),
+            selectedError,
+            v => { selectedError = v; });
+
+        renderGrid('comments_container',
+            COMMENTS.map(v => ({ value: v, label: t.comments[v] || v })),
+            selectedComment,
+            v => { selectedComment = v; });
+    }
+
+    // ===== Til va rejim =====
+    function setLang(l) { lang = l; lsSet('ui_lang', l); renderAll(); }
+
+    function setTheme(th) {
+        theme = th;
+        document.documentElement.setAttribute('data-theme', th);
+        lsSet('ui_theme', th);
+        $('theme_btn').textContent = th === 'dark' ? '☀️' : '🌙';
+    }
+    function toggleTheme() { setTheme(theme === 'dark' ? 'light' : 'dark'); }
+
+    // QR/havoladan faqat raqamni ajratadi: ".../scan?code=12345" -> "12345"
+    function extractNumber(raw) {
+        let v = String(raw || "").trim();
+        if (!v) return "";
+        if (v.includes('=')) {
+            v = v.split('=').pop();                 // oxirgi "=" dan keyingi qism
+            v = v.split(/[&#?\s\/]/)[0];
+            const digits = v.replace(/\D/g, '');
+            if (digits) return digits;
+        }
+        if (/^\d+$/.test(v)) return v;
+        const m = v.match(/(\d{3,})(?!.*\d{3,})/);
+        return m ? m[1] : v;
+    }
+
+    // ===== QR skaner (Telegram'ning o'zining skaneri) =====
+    function scanQR(targetId, promptKey) {
+        if (!tg.showScanQrPopup || !tg.isVersionAtLeast || !tg.isVersionAtLeast('6.4')) {
+            alert(T().qrOld);
+            return;
+        }
+        tg.showScanQrPopup({ text: T()[promptKey] }, function (text) {
+            if (!text) return;
+            let value = String(text).trim();
+            if (targetId === 'samokat_num') value = extractNumber(value);
+            $(targetId).value = value;
+            return true; // skanerni yopadi
+        });
+    }
+
+    function logoutMechanic() {
+        lsDel('mexanik_name');
+        lsDel('mexanik_phone');
+        user = null;
+        selectedType = "";
+        applyTypes();
+    }
+
+    function submitForm() {
+        const t = T();
+        let name = "", phone = "";
+        if (user) { name = user.name; phone = user.phone; }
+        else {
+            name = $('mexanik_name').value;
+            phone = $('mexanik_phone').value.trim().replace(/\s+/g, '');
+            if (!name) { alert(t.aName); return; }
+            if (!phone) { alert(t.aPhone); return; }
+            if (!phone.startsWith('+')) phone = '+' + phone;
+        }
+
+        const isBattery = selectedPart === "Batareyka";
+        const samokatInput = $('samokat_num');
+        const snInput = $('battery_sn');
+        const samokatNum = isBattery ? "" : extractNumber(samokatInput.value);
+        const sn = snInput.value.trim();
+
+        if (!selectedType) { alert(t.aType); return; }
+        const allowed = MECHANIC_TYPES[name] || TYPES;
+        if (!allowed.includes(selectedType)) {
+            alert(t.aMech(name, allowed.map(x => t.types[x]).join(", "))); return;
+        }
+        if (!selectedPart) { alert(t.aPart); return; }
+        if (!isBattery && !samokatNum) { alert(t.aNum(t.typesGen[selectedType])); return; }
+        if (isBattery && !sn) { alert(t.aSN); return; }
+        if (!selectedError) { alert(t.aErr); return; }
+        if (!selectedComment) { alert(t.aComm); return; }
+
+        lsSet('mexanik_name', name);
+        lsSet('mexanik_phone', phone);
+
+        const resultData = {
+            ism: name,
+            tel: phone,
+            til: lang,
+            turi: selectedType,
+            samokat_num: samokatNum,
+            qism: selectedPart,
+            sn: isBattery ? sn : "",
+            xatolik: selectedError,
+            izoh: selectedComment
+        };
+
+        tg.sendData(JSON.stringify(resultData));
+
+        // Forma tozalanadi (Telegram odatda Web App'ni o'zi yopadi)
+        samokatInput.value = "";
+        snInput.value = "";
+        selectedType = ""; selectedPart = ""; selectedError = ""; selectedComment = "";
+        user = { name: name, phone: phone };
+        applyTypes();
+        $('success_block').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => { $('success_block').style.display = 'none'; }, 4000);
+    }
+
+    // ===== Ishga tushirish =====
+    (function init() {
+        // Til: saqlangan, bo'lmasa Telegram tili, bo'lmasa o'zbekcha
+        let l = lsGet('ui_lang');
+        if (l !== 'uz' && l !== 'ru') {
+            const code = (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) || '';
+            l = code === 'ru' ? 'ru' : 'uz';
+        }
+        lang = l;
+
+        // Rejim: saqlangan, bo'lmasa Telegram rejimi
+        let th = lsGet('ui_theme');
+        if (th !== 'light' && th !== 'dark') th = (tg.colorScheme === 'dark') ? 'dark' : 'light';
+        setTheme(th);
+
+        const savedName = lsGet('mexanik_name');
+        const savedPhone = lsGet('mexanik_phone');
+        if (savedName && savedPhone) user = { name: savedName, phone: savedPhone };
+
+        applyTypes();
+    })();
+</script>
+</body>
+</html>
